@@ -872,6 +872,9 @@ pub(crate) fn erase_closure_body_for_closure_captures<'tcx>(
     tcx: TyCtxt<'tcx>,
     local_def_id: LocalDefId,
 ) -> bool {
+    if ATOMIC_CLOSURE_CAPTURE_SHADOW.load(Ordering::SeqCst) {
+        return false;
+    }
     let fn_def_id = enclosing_fn_local_def_id(tcx, local_def_id);
     let erasure_ctxt = get_verus_erasure_ctxt(fn_def_id);
     matches!(erasure_ctxt.bodies.get(&local_def_id), Some(BodyErasure { erase_body: true, .. }))

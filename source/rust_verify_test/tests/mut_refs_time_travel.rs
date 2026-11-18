@@ -1944,3 +1944,17 @@ test_verify_one_file! {
         }
     } => Err(err) => assert_spec_borrowed(err, "v")
 }
+
+test_verify_one_file! {
+    #[test] spec_closure_in_exec_closure verus_code! {
+        use vstd::prelude::*;
+        fn test() {
+            let mut g: Ghost<int> = Ghost(0);
+            let r = &mut g;
+            let f = || {
+                let ghost h = |u: int| g@;
+            };
+            *r = Ghost(1);
+        }
+    } => Err(err) => assert_spec_borrowed(err, "g")
+}
