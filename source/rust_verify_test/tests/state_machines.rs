@@ -9717,3 +9717,46 @@ test_verify_one_file! {
         }}
     } => Err(err) => assert_vir_error_msg(err, "prophetic expression not allowed in `guard` statement")
 }
+
+test_verify_one_file! {
+    #[test] inductive_lemma_param_from_macro IMPORTS.to_string() + verus_code_str! {
+        pub trait FalseInv {
+            spec fn invariant(&self) -> bool;
+        }
+
+        impl<T> FalseInv for T {
+            open spec fn invariant(&self) -> bool {
+                false
+            }
+        }
+
+        pub fn pre() {
+        }
+
+        macro_rules! mk_sm {
+            ($pre:ident) => {
+                state_machine!{ X {
+                    fields {
+                        pub v: int,
+                    }
+
+                    transition!{
+                        bump() {
+                            update v = 1;
+                        }
+                    }
+
+                    #[invariant]
+                    pub fn inv0(&self) -> bool {
+                        self.v == 0
+                    }
+
+                    #[inductive(bump)]
+                    fn bump_inductive($pre: Self, post: Self) { } // FAILS
+                }}
+            }
+        }
+
+        mk_sm!(pre);
+    } => Err(err) => assert_one_fails(err)
+}
