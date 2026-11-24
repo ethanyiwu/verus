@@ -2088,7 +2088,7 @@ impl Visitor {
                     let span = item.span();
                     let static_assert_size = if self.erase_ghost.erase() {
                         quote! {
-                            if ::core::mem::size_of::<#type_>() != #size_lit {
+                            if ::core::mem::size_of::<#type_>() as u128 != #size_lit {
                                 ::core::panic!("does not have the expected size");
                             }
                         }
@@ -2098,7 +2098,7 @@ impl Visitor {
                     let static_assert_align = if let Some(align_lit) = align_lit {
                         if self.erase_ghost.erase() {
                             quote! {
-                                if ::core::mem::align_of::<#type_>() != #align_lit {
+                                if ::core::mem::align_of::<#type_>() as u128 != #align_lit {
                                     ::core::panic!("does not have the expected alignment");
                                 }
                             }

@@ -575,3 +575,15 @@ test_verify_one_file_with_options! {
         }
     } => Err(err) => assert_vir_error_msg(err, "`global` must be a module-level item")
 }
+
+test_verify_one_file_with_options! {
+    #[test] test_size_larger_than_usize_compile ["vstd", "--compile"] => verus_code! {
+        pub struct S { pub a: u64, pub b: u64 }
+
+        #[allow(overflowing_literals)]
+        global size_of S == 18446744073709551632;
+    } => Err(err) => {
+        assert_rust_error_msg(err.clone(), "evaluation panicked");
+        assert!(err.errors[0].rendered.contains("does not have the expected size"));
+    }
+}
