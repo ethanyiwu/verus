@@ -391,6 +391,14 @@ fn to_lemma(impl_item_method: ImplItemFn, purpose: LemmaPurpose) -> parse::Resul
         &impl_item_method,
         "an inductivity lemma is implied to be 'proof'; it should not be explicitly labelled",
     )?;
+    for attr in &impl_item_method.attrs {
+        if attr.path().is_ident("cfg") || attr.path().is_ident("cfg_attr") {
+            return Err(Error::new(
+                attr.span(),
+                "an inductivity lemma cannot have a `cfg` or `cfg_attr` attribute",
+            ));
+        }
+    }
     Ok(Lemma { purpose, func: impl_item_method })
 }
 

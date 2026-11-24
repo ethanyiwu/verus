@@ -9783,3 +9783,29 @@ test_verify_one_file! {
         }}
     } => Err(err) => assert_vir_error_msg(err, "disallowed: constructor for an opaque datatype")
 }
+
+test_verify_one_file! {
+    #[test] inductive_lemma_cfg IMPORTS.to_string() + verus_code_str! {
+        tokenized_state_machine!{ X {
+            fields {
+                #[sharding(variable)] pub v: u64,
+            }
+
+            #[invariant]
+            pub fn inv(&self) -> bool { self.v == 0 }
+
+            init!{ initialize() { init v = 0; } }
+
+            transition!{ bump() { update v = 1; } }
+
+            #[inductive(initialize)]
+            fn initialize_inductive(post: Self) { }
+
+            #[inductive(bump)]
+            #[cfg(any())]
+            fn bump_inductive(pre: Self, post: Self) { }
+
+            pub proof fn bump_inductive() { }
+        }}
+    } => Err(e) => assert_vir_error_msg(e, "cannot have a `cfg` or `cfg_attr` attribute")
+}
