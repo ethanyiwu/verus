@@ -9783,3 +9783,34 @@ test_verify_one_file! {
         }}
     } => Err(err) => assert_vir_error_msg(err, "disallowed: constructor for an opaque datatype")
 }
+
+test_verify_one_file! {
+    #[test] option_arrow_0_user_trait IMPORTS.to_string() + verus_code_str! {
+        pub trait MyArrow {
+            spec fn arrow_0(self) -> int;
+        }
+
+        impl MyArrow for Option<int> {
+            open spec fn arrow_0(self) -> int { 42 }
+        }
+
+        tokenized_state_machine!{ X {
+            fields {
+                #[sharding(option)] pub f: Option<int>,
+                #[sharding(variable)] pub g: int,
+            }
+
+            init!{ initialize() { init f = Option::Some(7); init g = 42; } }
+
+            transition!{ tr() {
+                remove f -= Some(let x);
+                update g = x;
+            } }
+
+            #[invariant] pub spec fn inv(&self) -> bool { self.g == 42 }
+
+            #[inductive(initialize)] fn ii(post: Self) {}
+            #[inductive(tr)] fn it(pre: Self, post: Self) {} // FAILS
+        }}
+    } => Err(err) => assert_one_fails(err)
+}
